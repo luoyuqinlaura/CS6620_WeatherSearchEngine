@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Query Data</title>
+
+    <link rel="stylesheet" type="text/css" href="/static/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="/static/bootstrap-datetimepicker.min.css">
+    <script src="/static/jquery-3.2.1.min.js"></script>
+    <script src="/static/bootstrap.min.js"></script>
+    <script src="/static/bootstrap-datetimepicker.min.js"></script>
+    <style>
+        body{
+            background: cornsilk;
+        }
+        em{
+            color: #3795dc;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+<div>
+    <h1 style="text-align: center;">AP Search Engine</h1>
+    <div style="text-align: center;">
+        <!--<textarea style="vertical-align: middle;" id="word"></textarea>-->
+
+        <span style="font-weight: bold;vertical-align: middle;">Region:</span>
+        <input type="text" id="Region" style="width: 100px" />
+        <span style="font-weight: bold;vertical-align: middle;">Country:</span>
+        <input type="text" id="Country" style="width: 100px" />
+        <span style="font-weight: bold;vertical-align: middle;">City:</span>
+        <input type="text" id="City" style="width: 100px" />
+        <span style="font-weight: bold;vertical-align: middle;">SDate:</span>
+        <input type="text" readonly id="sdate" style="width: 100px" />
+        <span style="font-weight: bold;vertical-align: middle;">EDate:</span>
+        <input type="text" readonly id="edate" style="width: 100px" />
+        <!--<span style="font-weight: bold;vertical-align: middle;">AvgTemperature:</span>-->
+        <!--<input type="text" id="AvgTemperature" style="width: 100px" />-->
+        <button style="vertical-align: middle;" id="search" onclick="getData()">Search</button>
+    </div>
+
+
+    <div>
+        <h1>Search Result:</h1>
+
+        <!--<div id="result">-->
+
+        <!--</div>-->
+
+        <table id="receiveLogs-table"
+             class="table table-hover"
+               data-pagination="true"
+               data-show-refresh="false"
+               data-show-toggle="false"
+               data-showColumns="false"
+               data-toggle="table"
+               data-row-style="rowStyle"
+               data-url="../data/login_info.json">
+            <thead>
+            <tr>
+                <th data-field="Region" data-align="center" >Region</th>
+                <th data-field="Country" data-align="center">Country</th>
+                <th data-field="City" data-align="center">City</th>
+                <th data-field="Year" data-align="center" >Year</th>
+                <th data-field="Month" data-align="center">Month</th>
+                <th data-field="Day" data-align="center">Day</th>
+                <th data-field="AvgTemperature" data-align="center">AvgTemperature</th>
+                <th data-field="More" data-align="center">More</th>
+            </tr>
+            </thead>
+            <tbody id="table">
+
+            </tbody>
+        </table>
+    </div>
+
+
+    <div id="more" style="display: none;">
+        <h1>More Like This Result:</h1>
+
+        <table
+             class="table table-hover"
+               data-pagination="true"
+               data-show-refresh="false"
+               data-show-toggle="false"
+               data-showColumns="false"
+               data-toggle="table"
+               data-row-style="rowStyle"
+               data-url="../data/login_info.json">
+            <thead>
+            <tr>
+                <th data-field="Region" data-align="center" >Region</th>
+                <th data-field="Country" data-align="center">Country</th>
+                <th data-field="City" data-align="center">City</th>
+                <th data-field="Year" data-align="center" >Year</th>
+                <th data-field="Month" data-align="center">Month</th>
+                <th data-field="Day" data-align="center">Day</th>
+                <th data-field="AvgTemperature" data-align="center">AvgTemperature</th>
+            </tr>
+            </thead>
+            <tbody id="table2">
+
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+</body>
+
+<script type="text/javascript">
+    $(function () {
+        $("#sdate").datetimepicker({
+            format: 'm/d/yyyy',
+            initialDate:new Date(),
+            autoclose:true,
+            minView: 2
+        });
+        $("#edate").datetimepicker({
+            format: 'm/d/yyyy',
+            initialDate:new Date(),
+            minView:'day',
+            autoclose:true,
+            minView: 2
+        });
+    });
+
+    function getData() {
+        var Region = $("#Region").val();
+        var Country = $("#Country").val();
+        var City = $("#City").val();
+        var sdate = $("#sdate").val();
+        var edate = $("#edate").val();
+        var AvgTemperature = $("#AvgTemperature").val();
+        $.ajax({
+            type : "post",
+            url : "/getData",
+            data : {Region:Region,Country:Country,City:City,sdate:sdate,edate:edate,AvgTemperature:AvgTemperature},
+            dataType : "json",
+            success : function(data) {
+                console.log(data)
+                if (data.status == "200") {
+                    $("#more").hide();
+                    $("#table").empty();
+                    var list = data.content.list;
+                    if(list.length>0){
+                        var htmlStr = '';
+                        for (var i=0;i<list.length;i++) {
+                            htmlStr += '<tr>';
+                            var Region = list[i]['Region'];
+                            var Country = list[i]['Country'];
+                            var City = list[i]['City'];
+                            var Month = list[i]['Month'];
+                            var Day = list[i]['Day'];
+                            var Year = list[i]['Year'];
+                            var AvgTemperature = list[i]['AvgTemperature'];
+                            var str = '<td>'+Region+'</td>' +
+                                    '<td>' +Country+'</td>' +
+                                    '<td>' +City+'</td>' +
+                                    '<td>' +Year+'</td>' +
+                                    '<td>' +Month+'</td>' +
+                                    '<td>' +Day+'</td>' +
+                                    '<td>' +AvgTemperature+'</td>'+
+                                    '<td><a href="javascript:void(0);" onclick="more('+AvgTemperature+')">More like this</a></td>';
+                            htmlStr += str;
+                            htmlStr += '</tr>';
+                        }
+                        $("#table").html(htmlStr);
+                    }else{
+                        $("#table").html('No Results');
+                    }
+
+                }else{
+                    alert('error')
+                }
+            }
+        });
+    }
+
+    function more(AvgTemperature) {
+        var Region = $("#Region").val();
+        var Country = $("#Country").val();
+        var City = $("#City").val();
+        var sdate = $("#sdate").val();
+        var edate = $("#edate").val();
+        $.ajax({
+            type : "post",
+            url : "/getData",
+            data : {Region:Region,Country:Country,City:City,sdate:sdate,edate:edate,AvgTemperature:AvgTemperature},
+            dataType : "json",
+            success : function(data) {
+                console.log(data)
+                if (data.status == "200") {
+                    $("#more").show();
+                    $("#table2").empty();
+                    var list = data.content.list;
+                    if(list.length>0){
+                        var htmlStr = '';
+                        for (var i=0;i<list.length;i++) {
+                            htmlStr += '<tr>';
+                            var Region = list[i]['Region'];
+                            var Country = list[i]['Country'];
+                            var City = list[i]['City'];
+                            var Month = list[i]['Month'];
+                            var Day = list[i]['Day'];
+                            var Year = list[i]['Year'];
+                            var AvgTemperature = list[i]['AvgTemperature'];
+                            var str = '<td>'+Region+'</td>' +
+                                    '<td>' +Country+'</td>' +
+                                    '<td>' +City+'</td>' +
+                                    '<td>' +Year+'</td>' +
+                                    '<td>' +Month+'</td>' +
+                                    '<td>' +Day+'</td>' +
+                                    '<td>' +AvgTemperature+'</td>';
+                            htmlStr += str;
+                            htmlStr += '</tr>';
+                        }
+                        $("#table2").html(htmlStr);
+                        $("html,body").animate({scrollTop:$("#more").offset().top},1000)
+                    }else{
+                        $("#table").html('No Results');
+                    }
+                }else{
+                    alert('error')
+                }
+            }
+        });
+    }
+
+</script>
+
+</html>
+
